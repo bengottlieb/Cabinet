@@ -6,3 +6,12 @@
 //
 
 import Foundation
+
+public class Cabinet {
+	public static let instance = Cabinet()
+	
+	public let store = Store()
+	
+	public func setup() {
+	}
+}
