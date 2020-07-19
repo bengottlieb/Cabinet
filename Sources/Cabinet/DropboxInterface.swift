@@ -21,10 +21,12 @@ public class DropboxInterface: ObservableObject {
 		public static let didAuthorize = Notification.Name(rawValue: "DropboxInterface.didAuthorize")
 	}
 	
-	public enum DropboxError: Error { case notSetup, badImage }
+	public enum DropboxError: Error { case notSetup, badImage, server(String), noResponse }
 	
 	@Published public var isAuthorized = false
 
+	
+	private var client: DropboxClient? { DropboxClientsManager.authorizedClient }
 	public func setup(withAPIKey apiKey: String = "3jzy836caceuxw4") {
 		DropboxClientsManager.setupWithAppKey(apiKey)
 		self.isAuthorized = DropboxClientsManager.authorizedClient != nil
@@ -37,6 +39,12 @@ public class DropboxInterface: ObservableObject {
 	public func disconnect() {
 		DropboxClientsManager.unlinkClients()
 		self.isAuthorized = false
+	}
+	
+	public func checkForNewFiles(in path: String = "") {
+		_ = client?.files.listFolder(path: "").response { response, error in
+			Cabinet.instance.import(dropboxMetadata: response?.entries)
+		}
 	}
 	
 	public func authorize(from controller: UIViewController?) {
@@ -60,6 +68,43 @@ public class DropboxInterface: ObservableObject {
 				
 			default:
 				print("Uh oh, dropbox broke")
+			}
+		}
+	}
+}
+
+extension DropboxInterface {
+	public func move(from src: String, toDirectory dir: String, completion: ((Result<String, Error>) -> Void)? = nil) {
+		var dest = dir
+		if !dest.hasSuffix("/") { dest += "/" }
+		if !dest.hasPrefix("/") { dest = "/" + dest }
+		let filename = src.components(separatedBy: "/").last ?? src
+		dest.append(filename)
+		self.move(from: src, to: dest, completion: completion)
+	}
+	
+	public func move(from src: String, to dst: String, completion: ((Result<String, Error>) -> Void)? = nil) {
+		client?.files.moveV2(fromPath: src, toPath: dst, autorename: true).response { response, error in
+			if let err = error {
+				completion?(.failure(DropboxError.server(err.description)))
+			} else if let name = response?.metadata.name {
+				completion?(.success(name))
+			} else {
+				completion?(.failure(DropboxError.noResponse))
+			}
+		}
+	}
+	
+	func delete(file path: String) {
+		client?.files.deleteV2(path: path)
+	}
+	
+	public func download(from src: String, to url: URL, completion: ((Error?) -> Void)?) {
+		client?.files.download(path: src, destination: { _, _ in url }).response { metadata, error in
+			if let err = error {
+				print("Error when downloading \(src): \(err)")
+			} else {
+				completion?(nil)
 			}
 		}
 	}

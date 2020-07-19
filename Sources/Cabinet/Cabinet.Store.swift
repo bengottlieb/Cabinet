@@ -22,15 +22,21 @@ extension Cabinet {
 				
 				.eraseToAnyPublisher()
 		}
-		
-		public func files(matching: NSPredicate) -> AnyPublisher<[File], Never> {
+
+		public var importContext: AnyPublisher<NSManagedObjectContext, Never> {
+			isLoaded
+				.map { _ in self.container.newBackgroundContext() }
+				
+				.eraseToAnyPublisher()
+		}
+
+		public func files(matching: NSPredicate = NSPredicate(value: true)) -> AnyPublisher<[File], Never> {
 			let request = NSFetchRequest<File>(entityName: "File")
+			request.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
 
 			return self.viewContext
 				.flatMap() { ctx in
 					ctx.publisher(for: request)
-						.replaceError(with: [])
-						.eraseToAnyPublisher()
 				}
 				.eraseToAnyPublisher()
 		}
@@ -43,6 +49,7 @@ extension Cabinet {
 				if let error = err {
 					print("Error loading Cabinet: \(error)")
 				} else {
+					self.container.viewContext.registerForExternalChangeUpdates()
 					self.isLoaded.value = true
 				}
 			}
