@@ -32,7 +32,18 @@ extension Cabinet {
 
 		public func files(matching: NSPredicate = NSPredicate(value: true)) -> AnyPublisher<[File], Never> {
 			let request = NSFetchRequest<File>(entityName: "File")
-			request.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
+			request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+
+			return self.viewContext
+				.flatMap() { ctx in
+					ctx.publisher(for: request)
+				}
+				.eraseToAnyPublisher()
+		}
+		
+		public func tracks(matching: NSPredicate = NSPredicate(value: true)) -> AnyPublisher<[Track], Never> {
+			let request = NSFetchRequest<Track>(entityName: "Track")
+			request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
 
 			return self.viewContext
 				.flatMap() { ctx in
