@@ -19,12 +19,13 @@ let package = Package(
     dependencies: [
 		.package(url: "https://github.com/bengottlieb/Suite.git", from: "0.9.55"),
 		.package(url: "https://github.com/bengottlieb/ID3TagEditor", from: "3.2.0"),
+		.package(url: "https://github.com/bengottlieb/SwiftyDropbox", from: "5.2.0"),
 
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
-        .target(name: "Cabinet", dependencies: ["Suite", "ID3TagEditor"]),
+        .target(name: "Cabinet", dependencies: ["Suite", "ID3TagEditor", "SwiftyDropbox"]),
 		
         
        // .testTarget(name: "CabinetTests", dependencies: ["Cabinet"]),
