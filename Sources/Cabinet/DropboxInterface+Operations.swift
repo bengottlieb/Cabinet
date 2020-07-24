@@ -49,6 +49,7 @@ extension DropboxInterface {
 		client?.files.download(path: src, destination: { _, _ in url }).response { metadata, error in
 			if let err = error {
 				print("Error when downloading \(src): \(err)")
+				completion?(DropboxError.server(err.description))
 			} else {
 				completion?(nil)
 			}
@@ -126,7 +127,7 @@ extension DropboxInterface {
 
 			if !moveThese.isEmpty {
 				self.client?.files.moveBatch(entries: moveThese.compactMap { $0.relocationPath }).response { result, error in
-					print(result)
+					print("Copied: ", result?.description ?? "none")
 				}
 			}
 		}

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="17162" systemVersion="19G73" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="17175" systemVersion="19G73" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="Category" representedClassName="Category" syncable="YES"/>
+    <entity name="Family" representedClassName="Family" syncable="YES"/>
     <entity name="File" representedClassName="CabinetFile" syncable="YES">
         <attribute name="album" optional="YES" attributeType="String"/>
         <attribute name="artist" optional="YES" attributeType="String"/>
-        <attribute name="bitrate" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="bpm" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="codec" optional="YES" attributeType="String"/>
-        <attribute name="composer" optional="YES" attributeType="String"/>
-        <attribute name="copyright" optional="YES" attributeType="String"/>
+        <attribute name="declaredDuration" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="dropboxHash" optional="YES" attributeType="String"/>
         <attribute name="duration" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="filePath" optional="YES" attributeType="String"/>
@@ -16,7 +16,6 @@
         <attribute name="importedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="localName" optional="YES" attributeType="String"/>
         <attribute name="modifiedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="pertinentDuration" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="size" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="sourceID" optional="YES" attributeType="String"/>
         <attribute name="tags" optional="YES" attributeType="String"/>
@@ -27,13 +26,26 @@
         <relationship name="tracks" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Track" inverseName="source" inverseEntity="Track"/>
     </entity>
     <entity name="Track" representedClassName="CabinetTrack" syncable="YES">
+        <attribute name="colorHex" optional="YES" attributeType="String"/>
         <attribute name="duration" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="fadeInDuration" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="fadeOutDuration" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="overrideFlags" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="pan" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="postWaitDuration" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="preWaitDuration" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="rate" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="relativeVolume" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="startOffset" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="title" optional="YES" attributeType="String"/>
+        <attribute name="weighting" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <relationship name="source" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="File" inverseName="tracks" inverseEntity="File"/>
     </entity>
     <elements>
-        <element name="File" positionX="-54" positionY="-9" width="128" height="403"/>
-        <element name="Track" positionX="-54" positionY="63" width="128" height="103"/>
+        <element name="Category" positionX="-36" positionY="153" width="128" height="43"/>
+        <element name="Family" positionX="-45" positionY="144" width="128" height="43"/>
+        <element name="File" positionX="-54" positionY="-9" width="128" height="358"/>
+        <element name="Track" positionX="-54" positionY="63" width="128" height="268"/>
     </elements>
 </model>

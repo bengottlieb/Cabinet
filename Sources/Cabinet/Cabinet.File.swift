@@ -32,7 +32,7 @@ extension Cabinet {
 		@NSManaged public dynamic var bpm: Int
 		@NSManaged public dynamic var bitrate: Int
 		@NSManaged public dynamic var duration: Double
-		@NSManaged public dynamic var pertinentDuration: Double
+		@NSManaged public dynamic var declaredDuration: Double
 		@NSManaged public dynamic var trackNumber: Int
 		@NSManaged public dynamic var year: Int
 		

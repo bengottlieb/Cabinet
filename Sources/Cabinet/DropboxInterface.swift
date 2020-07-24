@@ -14,8 +14,10 @@ import SwiftUI
 
 // Dropbox app page: https://www.dropbox.com/developers/apps/info/3jzy836caceuxw4
 
-public class DropboxInterface: ObservableObject {
+public class DropboxInterface: ObservableObject, FileImporter {
 	public static let instance = DropboxInterface()
+	
+	public typealias FileInfo = Files.Metadata
 	
 	public struct Notifications {
 		public static let didAuthorize = Notification.Name(rawValue: "DropboxInterface.didAuthorize")
@@ -46,9 +48,11 @@ public class DropboxInterface: ObservableObject {
 		self.isAuthorized = false
 	}
 	
-	public func checkForNewFiles(in path: String = Cabinet.instance.importDirectoryName) {
-		_ = client?.files.listFolder(path: path).response { response, error in
-			Cabinet.instance.import(dropboxMetadata: response?.entries)
+	public func checkForNewFiles(in path: String = Cabinet.instance.importDirectoryName, completion: @escaping (Result<[Files.Metadata], Error>) -> Void) {
+		_ = client?.files.listFolder(path: path.prefixedBySlashIfRequired).response { response, error in
+			if let entries = response?.entries {
+				completion(.success(entries))
+			}
 		}
 	}
 	
@@ -97,5 +101,42 @@ public struct DropboxAuthorizationButton: View {
 				Text("Authorize")
 			}
 		}
+	}
+}
+
+
+extension Files.Metadata: ImportableFileInfo {
+	public var isDirectory: Bool { !(self is Files.FileMetadata) }
+	public var sha256Hash: String? { (self as? Files.FileMetadata)?.contentHash }
+	public var path: String? { (self as? Files.FileMetadata)?.pathDisplay }
+	public var fileID: String? { (self as? Files.FileMetadata)?.id }
+	public var modifiedAt: Date? { (self as? Files.FileMetadata)?.clientModified }
+	public var fileSize: Int64 { Int64((self as? Files.FileMetadata)?.size ?? 0) }
+
+	public func move(toDirectory: DirectoryType, completion: @escaping (Error?) -> Void) {
+		guard let path = self.pathDisplay else { return }
+		
+		switch toDirectory {
+		case .imported:
+			DropboxInterface.instance.move(from: path, toDirectory: Cabinet.instance.successfulImportsDirectoryName)
+			
+		case .rejected:
+			DropboxInterface.instance.move(from: path, toDirectory: Cabinet.instance.rejectedImportsDirectoryName)
+		}
+	}
+	
+	public func copy(to url: URL, completion: @escaping (Error?) -> Void) {
+		if let path = self.pathDisplay {
+			DropboxInterface.instance.download(from: path, to: url) { error in
+				completion(error)
+			}
+		} else {
+			completion(nil)
+		}
+	}
+	
+	public func delete() {
+		guard let path = self.pathDisplay else { return }
+		DropboxInterface.instance.delete(file: path)
 	}
 }

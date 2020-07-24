@@ -8,7 +8,7 @@
 import Foundation
 
 extension String {
-	var extractedPertinentDuration: Double? {
+	var extractedDeclaredDuration: Double? {
 		guard let last = self.deletingFileExtension.components(separatedBy: .whitespaces).last else { return nil }
 		let filtered = last.filter { $0 == "." || ($0 >= "0" && $0 <= "9") }
 		if filtered != last { return nil }
@@ -23,5 +23,9 @@ extension String {
 		}
  
 		return nil
+	}
+	
+	var prefixedBySlashIfRequired: String {
+		self.hasPrefix("/") ? self : ("/" + self) 
 	}
 }

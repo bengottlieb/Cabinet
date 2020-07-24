@@ -16,10 +16,12 @@ public class Cabinet {
 	
 	public var rejectedImportsDirectoryName = "Rejected Import"
 	public var successfulImportsDirectoryName = "Imported"
-	public var importDirectoryName = "/Import"
+	public var importDirectoryName = "Import"
 	public var afterImportAction = AfterImportAction.none
 
 	public let store = Store()
+	
+	public var importer = DropboxInterface.instance
 	
 	public func setup() {
 	}

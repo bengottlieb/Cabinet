@@ -11,40 +11,47 @@ import Suite
 import AVFoundation
 
 extension Cabinet {
-	func processImportedFile(_ path: String) {
+	func process(importedFile: ImportableFileInfo) {
 		switch afterImportAction {
 		case .delete:
-			DropboxInterface.instance.delete(file: path)
+			importedFile.delete()
 			
 		case .move:
-			DropboxInterface.instance.move(from: path, toDirectory: self.successfulImportsDirectoryName)
+			importedFile.move(toDirectory: .imported) { _ in }
 			
 		case .none: break
 		}
 	}
 	
-	func `import`(dropboxMetadata: [Files.Metadata]?) {
-		guard let metadata = dropboxMetadata else { return }
+	func `import`(files: [ImportableFileInfo]?) {
+		guard let files = files else { return }
 		
 		let key = UUID().uuidString
 		self.store.importContext
 			.sink { moc in
-				for meta in metadata {
-					if let fileData = meta as? Files.FileMetadata {
-						if let existing = moc.fetchFile(withDropboxHash: fileData.contentHash) {
-							if let path = fileData.pathDisplay, let url = self.filePathBuilder.urlForFile(named: fileData.name), existing.hasChanged(given: fileData) {
+				for fileData in files {
+					if !fileData.isDirectory {
+						if let existing = moc.fetchFile(withDropboxHash: fileData.sha256Hash) {
+							if let path = fileData.path, let url = self.filePathBuilder.urlForFile(named: fileData.name), existing.hasChanged(given: fileData) {
 								DropboxInterface.instance.download(from: path, to: url) { error in
-									self.processImportedFile(path)
-									moc.perform { existing.ingest(metadata: fileData, at: url) }
+									if error == nil {
+										self.process(importedFile: fileData)
+										moc.perform { existing.ingest(file: fileData, at: url) }
+									}
 								}
 							}
 						} else {
-							if let path = fileData.pathDisplay, let url = self.filePathBuilder.urlForFile(named: fileData.name) {
+							if let path = fileData.path, let url = self.filePathBuilder.urlForFile(named: fileData.name) {
 								DropboxInterface.instance.download(from: path, to: url) { error in
-									self.processImportedFile(path)
-									moc.perform { moc.insertObject(entity: Cabinet.File.self)?.ingest(metadata: fileData, at: url) }
+									if error == nil {
+										self.process(importedFile: fileData)
+										moc.perform {
+											let record = moc.insertObject(entity: Cabinet.File.self)
+											record?.ingest(file: fileData, at: url)
+										}
+									}
 								}
-							} else if let path = meta.pathDisplay {
+							} else if let path = fileData.path {
 								DropboxInterface.instance.move(from: path, toDirectory: self.rejectedImportsDirectoryName)
 							}
 						}
@@ -58,21 +65,23 @@ extension Cabinet {
 }
 
 extension Cabinet.File {
-	func hasChanged(given metadata: Files.FileMetadata) -> Bool {
-		return self.dropboxHash != metadata.contentHash
+	func hasChanged(given file: ImportableFileInfo) -> Bool {
+		return self.dropboxHash != file.sha256Hash
 	}
 
-	func ingest(metadata: Files.FileMetadata, at url: URL) {
-		self.title = metadata.name
-		self.modifiedAt = metadata.clientModified
-		self.size = Int64(metadata.size)
-		self.sourceID = metadata.id
-		self.fileType = metadata.pathDisplay?.components(separatedBy: ".").last
+	func ingest(file: ImportableFileInfo, at url: URL) {
+		self.title = file.name
+		self.modifiedAt = file.modifiedAt
+		self.size = file.fileSize
+		self.sourceID = file.fileID
+		self.fileType = file.path?.components(separatedBy: ".").last
 		if self.importedAt == nil { self.importedAt = Date() }
 		self.updatedAt = Date()
-		self.pertinentDuration = metadata.name.extractedPertinentDuration ?? 0.0
-		self.duration = (try? AVAudioPlayer(contentsOf: url).duration) ?? 0
-		self.dropboxHash = metadata.contentHash
+		self.declaredDuration = file.name.extractedDeclaredDuration ?? 0.0
+		#if !targetEnvironment(simulator)
+			self.duration = (try? AVAudioPlayer(contentsOf: url).duration) ?? 0
+		#endif
+		self.dropboxHash = file.sha256Hash
 
 		if url != self.localURL {
 			if let oldURL = self.localURL { try? FileManager.default.removeItem(at: oldURL) }
@@ -82,7 +91,7 @@ extension Cabinet.File {
 		self.refreshID3Tags()
 
 		if self.tracks.isEmpty {
-			self.createTrack(named: self.title ?? metadata.name)
+			self.createTrack(named: self.title ?? file.name)
 		}
 		self.managedObjectContext?.saveContext(wait: false, toDisk: true, ignoreHasChanges: false)
 	}
