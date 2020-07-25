@@ -11,6 +11,7 @@ import SwiftyDropbox
 extension DropboxInterface {
 	public typealias MoveCompletion = ((Result<String, Error>) -> Void)
 	public typealias DeleteCompletion = ((Error?) -> Void)
+	public typealias DownloadCompletion = ((Error?) -> Void)
 
 	public func move(from src: String, batched: Bool = true, toDirectory dir: String, completion: MoveCompletion? = nil) {
 		var dest = dir
@@ -45,7 +46,7 @@ extension DropboxInterface {
 		}
 	}
 	
-	public func download(from src: String, to url: URL, completion: DeleteCompletion?) {
+	public func download(from src: String, to url: URL, completion: DownloadCompletion?) {
 		client?.files.download(path: src, destination: { _, _ in url }).response { metadata, error in
 			if let err = error {
 				print("Error when downloading \(src): \(err)")

@@ -21,7 +21,7 @@ extension Cabinet {
 		@NSManaged public dynamic var importedAt: Date?
 		@NSManaged public dynamic var size: Int64
 		@NSManaged public dynamic var filePath: String?
-		@NSManaged public dynamic var dropboxHash: String?
+		@NSManaged public dynamic var contentHash: String?
 
 		@NSManaged public dynamic var album: String?
 		@NSManaged public dynamic var artist: String?
@@ -36,7 +36,9 @@ extension Cabinet {
 		@NSManaged public dynamic var trackNumber: Int
 		@NSManaged public dynamic var year: Int
 		
-		@NSManaged public dynamic var tracks: Set<Cabinet.Track>
+		@NSManaged public dynamic var family: Family?
+		
+		@NSManaged public dynamic var tracks: NSSet
 
 		static let filesDirectory = FileManager.libraryDirectory.appendingPathComponent("CabinetFiles", isDirectory: true)
 		
@@ -67,6 +69,7 @@ extension Cabinet {
 			let track: Cabinet.Track = moc.insertObject()
 			track.source = self
 			track.title = name
+			track.family = self.family
 			return track
 		}
 	}

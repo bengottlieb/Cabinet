@@ -49,7 +49,7 @@ public class DropboxInterface: ObservableObject, FileImporter {
 	}
 	
 	public func checkForNewFiles(in path: String = Cabinet.instance.importDirectoryName, completion: @escaping (Result<[Files.Metadata], Error>) -> Void) {
-		_ = client?.files.listFolder(path: path.prefixedBySlashIfRequired).response { response, error in
+		_ = client?.files.listFolder(path: path.prefixedBySlashIfRequired, recursive: true).response { response, error in
 			if let entries = response?.entries {
 				completion(.success(entries))
 			}
@@ -112,8 +112,8 @@ extension Files.Metadata: ImportableFileInfo {
 	public var fileID: String? { (self as? Files.FileMetadata)?.id }
 	public var modifiedAt: Date? { (self as? Files.FileMetadata)?.clientModified }
 	public var fileSize: Int64 { Int64((self as? Files.FileMetadata)?.size ?? 0) }
-
-	public func move(toDirectory: DirectoryType, completion: @escaping (Error?) -> Void) {
+	
+	public func move(toDirectory: DirectoryType, completion: ((Error?) -> Void)?) {
 		guard let path = self.pathDisplay else { return }
 		
 		switch toDirectory {
@@ -125,13 +125,13 @@ extension Files.Metadata: ImportableFileInfo {
 		}
 	}
 	
-	public func copy(to url: URL, completion: @escaping (Error?) -> Void) {
+	public func copy(to url: URL, completion: ((Error?) -> Void)?) {
 		if let path = self.pathDisplay {
 			DropboxInterface.instance.download(from: path, to: url) { error in
-				completion(error)
+				completion?(error)
 			}
 		} else {
-			completion(nil)
+			completion?(nil)
 		}
 	}
 	

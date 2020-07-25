@@ -15,14 +15,14 @@ public protocol FileImporter {
 
 extension FileImporter {
 	public func importFiles(from path: String) {
+		Cabinet.instance.importDirectoryName = path
 		self.checkForNewFiles(in: path) { results in
 			switch results {
 			case .success(let files): Cabinet.instance.import(files: files)
 			case .failure(let error): print("Error when importing from \(path): \(error)")
 			}
 		}
-	}
-	
+	}	
 }
 
 public enum DirectoryType { case imported, rejected }
@@ -36,8 +36,23 @@ public protocol ImportableFileInfo {
 	var fileSize: Int64 { get }
 	var fileID: String? { get }
 	
-	func move(toDirectory: DirectoryType, completion: @escaping (Error?) -> Void)
-	func copy(to: URL, completion: @escaping (Error?) -> Void)
+	func move(toDirectory: DirectoryType, completion: ((Error?) -> Void)?)
+	func copy(to: URL, completion: ((Error?) -> Void)?)
 	func delete()
 }
 
+extension ImportableFileInfo {
+	var localURL: URL? {
+		Cabinet.instance.filePathBuilder.urlForFile(named: self.name)
+	}
+	
+	var parentDirectoryName: String? {
+		guard var path = self.path?.components(separatedBy: "/") else { return nil }
+		
+		path.remove("")
+		if path.first == Cabinet.instance.importDirectoryName { path.removeFirst() }
+		if path.last == self.name { path.removeLast() }
+		
+		return path.first?.isEmpty != true ? path.first : nil
+	}
+}

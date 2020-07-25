@@ -49,16 +49,39 @@ public class ICloudDriveInterface: ObservableObject, FileImporter {
 		public var fileSize: Int64 { (try? FileManager.default.attributesOfItem(atPath: url.path))?[.size] as? Int64 ?? 0 }
 		public var fileID: String? { sha256Hash }
 
-		public func move(toDirectory: DirectoryType, completion: @escaping (Error?) -> Void) {
-			
+		public func move(toDirectory: DirectoryType, completion: ((Error?) -> Void)?) {
+			do {
+				switch toDirectory {
+				case .imported:
+					if let dir = ICloudDriveInterface.instance.successfulImportDirectory {
+						let dest = dir.appendingPathComponent(url.lastPathComponent)
+						try FileManager.default.moveItem(at: url, to: dest)
+					}
+
+				case .rejected:
+					if let dir = ICloudDriveInterface.instance.rejectedImportDirectory {
+						let dest = dir.appendingPathComponent(url.lastPathComponent)
+						try FileManager.default.moveItem(at: url, to: dest)
+					}
+				}
+				
+				completion?(nil)
+			} catch {
+				completion?(error)
+			}
 		}
 		
-		public func copy(to: URL, completion: @escaping (Error?) -> Void) {
-			
+		public func copy(to: URL, completion: ((Error?) -> Void)?) {
+			do {
+				try FileManager.default.copyItem(at: url, to: to)
+				completion?(nil)
+			} catch {
+				completion?(error)
+			}
 		}
 		
 		public func delete() {
-			
+			try? FileManager.default.removeItem(at: url)
 		}
 	}
 }

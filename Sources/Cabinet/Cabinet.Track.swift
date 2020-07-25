@@ -33,6 +33,9 @@ extension Cabinet {
 		@NSManaged public dynamic var overrideFlags: Int64
 
 		@NSManaged public dynamic var source: File!
+		@NSManaged public dynamic var family: Family?
 		
+		public var familyName: String? { family?.name }
+
 	}
 }
